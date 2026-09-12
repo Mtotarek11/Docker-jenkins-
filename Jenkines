@@ -2,27 +2,20 @@ pipeline {
     agent any
     
     environment {
-        IMAGE_NAME = 'mohamed-omran/my-python-app' // استبدل بـ اسم الـ Image و حسابك على Docker Hub
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // الـ ID الخاص ببيانات الاعتماد في Jenkins
+        IMAGE_NAME = 'mohamedxomran/my-python-app'
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
     stages {
         stage('1. Checkout Code') {
             steps {
-                // سحب الكود بوضوح من برانش main
-                checkout([$class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [],
-                    submoduleCfg: [],
-                    userRemoteConfigs: [[url: '')) // سيستخدم الـ Repository الحالي تلقائياً
+                checkout scm
             }
         }
 
         stage('2. Repository Checksum') {
             steps {
                 script {
-                    // حساب Checksum للملفات الأساسية لتتبع التغييرات
                     sh 'git rev-parse HEAD > repo_checksum.txt'
                     echo "Repository Checksum created successfully."
                 }
@@ -43,13 +36,8 @@ pipeline {
                                                   usernameVariable: 'DOCKER_USER', 
                                                   passwordVariable: 'DOCKER_PASS')]) {
                     script {
-                        // تسجيل الدخول على Docker Hub
                         sh "echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin"
-                        
-                        // عمل Tag بناء على رقم الـ Build
                         sh "docker tag ${IMAGE_NAME}:latest ${IMAGE_NAME}:${BUILD_NUMBER}"
-                        
-                        // رفع النسختين (رقم الـ Build و latest)
                         sh "docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
                         sh "docker push ${IMAGE_NAME}:latest"
                     }
@@ -60,11 +48,8 @@ pipeline {
         stage('5. Run Docker Image') {
             steps {
                 script {
-                    // إيقاف أي كونتينر قديم بنفس الاسم (إن وجد) لتجنب التعارض
                     sh "docker stop my-running-app || true"
                     sh "docker rm my-running-app || true"
-                    
-                    // تشغيل الـ Container الجديد وربط البورت
                     sh "docker run -d --name my-running-app -p 3001:5000 ${IMAGE_NAME}:${BUILD_NUMBER}"
                 }
             }
