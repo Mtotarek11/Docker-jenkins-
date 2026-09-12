@@ -3,13 +3,19 @@ pipeline {
     
     environment {
         IMAGE_NAME = 'mohamed-omran/my-python-app' // استبدل بـ اسم الـ Image و حسابك على Docker Hub
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // ضع الـ ID الخاص ببيانات الاعتماد المسجلة في جينكينز
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // الـ ID الخاص ببيانات الاعتماد في Jenkins
     }
 
     stages {
         stage('1. Checkout Code') {
             steps {
-                checkout scm
+                // سحب الكود بوضوح من برانش main
+                checkout([$class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[url: '')) // سيستخدم الـ Repository الحالي تلقائياً
             }
         }
 
